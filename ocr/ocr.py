@@ -8,6 +8,6 @@ ocr = PaddleOCR(
     use_textline_orientation=True, # Use use_textline_orientation to enable/disable textline orientation classification model
     device="gpu:0", # Use device to specify GPU for model inference
 )
-result = ocr.predict("https://cdn-uploads.huggingface.co/production/uploads/681c1ecd9539bdde5ae1733c/3ul2Rq4Sk5Cn-l69D695U.png")  
+result = ocr.predict("./ss-png.png")  
 for res in result:  
     print(res["rec_texts"])
