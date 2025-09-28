@@ -27,12 +27,15 @@ collection = Collection("photo_search", schema)
 text_to_embed = f"{data['description']} {data['ocr']}"
 vector = model.encode(text_to_embed).tolist()
 ##isert
-
-collection.insert([[
-    data["id"], data["description"], data["ocr"], vector
-]])
+collection.insert([
+    [data["id"]],              # list of ids
+    [data["description"]],     # list of descriptions
+    [data["ocr"]],             # list of OCR texts
+    [vector]                   # list of embeddings
+])
 collection.flush()
 
+collection.load()
 
 ##search
 query = "Find dental clinic posters"
@@ -41,7 +44,7 @@ query_vector = model.encode(query).tolist()
 results = collection.search(
     data=[query_vector],
     anns_field="embedding",
-    param={"metric_type": "cosine", "params": {"nprobe": 10}},
+    param={"metric_type": "COSINE", "params": {"nprobe": 10}},
     limit=3,
     output_fields=["id", "description", "ocr"]
 )
@@ -52,10 +55,9 @@ for hit in results[0]:
     print(f"OCR Snippet: {hit.entity.get('ocr')[:100]}...\n")
 
 ##
+
 collection.create_index(
     field_name="embedding",
     index_params={"index_type": "IVF_FLAT", "metric_type": "COSINE", "params": {"nlist": 128}}
 )
-collection.load()
-
 
