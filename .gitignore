@@ -3,3 +3,4 @@ gpu/
 uploads/
 image_store.json
 *__pycache__
+volumes/
