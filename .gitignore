@@ -1,0 +1,5 @@
+venv/
+gpu/
+uploads/
+image_store.json
+*__pycache__

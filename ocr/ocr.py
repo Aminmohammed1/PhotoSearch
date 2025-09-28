@@ -8,6 +8,10 @@ ocr = PaddleOCR(
     use_textline_orientation=True, # Use use_textline_orientation to enable/disable textline orientation classification model
     device="gpu:0", # Use device to specify GPU for model inference
 )
-result = ocr.predict("./ss-png.png")  
-for res in result:  
-    print(res["rec_texts"])
+def provide_ocr(path):
+    result = ocr.predict(path)
+    ocr_text = ''
+    for res in result:  
+        for stringObj in res["rec_texts"]:
+            ocr_text += stringObj + '\n'
+    return ocr_text
