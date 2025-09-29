@@ -2,11 +2,17 @@ import os
 import uuid
 import json
 from fastapi import FastAPI, UploadFile, File, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse , FileResponse
 from descriptor.sample_run_blip import provide_description
+from milvus_connection import search
 from ocr.ocr import provide_ocr
+from pydantic import BaseModel
+
 from milvus_connection import insert
 app = FastAPI()
+
+class SearchRequest(BaseModel):
+    query: str
 
 # Directory to save uploaded images
 UPLOAD_DIR = "uploads"
@@ -78,19 +84,49 @@ async def upload_image(file: UploadFile = File(...)):
     return JSONResponse(content={"message": "Upload successful", "data": record})
 
 
+@app.post("/search")
+async def search_images(payload: SearchRequest):
+    query = payload.query
+    results = search(query)
+    image_files = []
+
+    for result in results:
+        img_id = result.get("id")
+        img_path = os.path.join(UPLOAD_DIR, f"{img_id}.jpg")
+
+        if os.path.exists(img_path):
+            image_files.append({
+                "id": img_id,
+                # Generate full URL that Postman/browser can load
+                "url": f"http://127.0.0.1:8000/image/{img_id}"
+            })
+
+    return JSONResponse(content={"images": image_files})
+
+
+@app.get("/image/{image_id}")
+async def get_image(image_id: str):
+    img_path = os.path.join(UPLOAD_DIR, f"{image_id}.jpg")
+    if not os.path.exists(img_path):
+        return JSONResponse(content={"error": "Image not found"}, status_code=404)
+
+    return FileResponse(img_path, media_type="image/jpeg")
+
+
+
 @app.get("/images")
 async def list_images():
     """List all uploaded images and their metadata."""
     return {"images": image_store}
 
 
-@app.get("/images/{image_id}")
-async def get_image_metadata(image_id: str):
-    """Retrieve metadata for a specific image by UUID."""
-    for record in image_store:
-        if record["id"] == image_id:
-            return record
-    raise HTTPException(status_code=404, detail="Image not found")
+# @app.get("/images/{image_id}")
+# async def get_image_metadata(image_id: str):
+#     """Retrieve metadata for a specific image by UUID."""
+#     for record in image_store:
+#         if record["id"] == image_id:
+#             return record
+#     raise HTTPException(status_code=404, detail="Image not found")
 
 
 # how to run server
