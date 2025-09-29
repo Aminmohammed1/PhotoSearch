@@ -5,6 +5,7 @@ from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import JSONResponse
 from descriptor.sample_run_blip import provide_description
 from ocr.ocr import provide_ocr
+from milvus_connection import insert
 app = FastAPI()
 
 # Directory to save uploaded images
@@ -70,6 +71,8 @@ async def upload_image(file: UploadFile = File(...)):
     record['ocr'] = ocr_text
     # Update in-memory + file store
     image_store.append(record)
+    insert(record)
+    print('data inserted in vector DB')
     append_metadata(record)
 
     return JSONResponse(content={"message": "Upload successful", "data": record})
