@@ -40,41 +40,79 @@ else:
 
 # 5. Insert some example data
 model = SentenceTransformer("all-MiniLM-L6-v2")
-data = {
-    "id": "0372b998-aa5b-4e76-9093-42b9467889f3",
-    "file": {"path": "C:\\Users\\ash4s\\Desktop\\PhotoSearch\\uploads\\0372b998-aa5b-4e76-9093-42b9467889f3.jpg"},
-    "name": "eng1.jpg",
-    "description": "a poster advertising a dental clinic",
-    "ocr": "Dental Implants, Root Canal, Smile Designing..."
-}
-text_to_embed = f"{data['description']} {data['ocr']}"
-vector = model.encode(text_to_embed).tolist()
 
-collection.insert([
-    [data["id"]],
-    [data["description"]],
-    [data["ocr"]],
-    [vector]
-])
-collection.flush()
+def insert(data):
+    text_to_embed = f"{data['description']} {data['ocr']}"
+    vector = model.encode(text_to_embed).tolist()
 
-# 6. Load collection into memory (needed every run before searching)
-collection.load()
+    collection.insert([
+        [data["id"]],
+        [data["description"]],
+        [data["ocr"]],
+        [vector]
+    ])
+    collection.flush()
 
-# 7. Search
-query = "Find dental clinic posters"
-query_vector = model.encode(query).tolist()
+    # 6. Load collection into memory (needed every run before searching)
+    collection.load()
 
-results = collection.search(
-    data=[query_vector],
-    anns_field="embedding",
-    param={"metric_type": "COSINE", "params": {"nprobe": 10}},
-    limit=3,
-    output_fields=["id", "description", "ocr"]
-)
+def search(query):
+    query_vector = model.encode(query).tolist()
+    results = collection.search(
+        data=[query_vector],
+        anns_field="embedding",
+        param={"metric_type": "COSINE", "params": {"nprobe": 10}},
+        limit=3,
+        output_fields=["id", "description", "ocr"]
+    )
+    result = []
+    for hit in results[0]:
+        temp = {}
+        temp['id'] = hit.entity.get('id')
+        temp['score'] = hit.distance
+        temp['description'] = hit.entity.get('description')
+        temp['ocr'] = hit.entity.get('ocr')
+        result.append(temp)
+    return result
 
-print("\n--- Search Results ---")
-for hit in results[0]:
-    print(f"ID: {hit.entity.get('id')} | Score: {hit.distance:.4f}")
-    print(f"Description: {hit.entity.get('description')}")
-    print(f"OCR Snippet: {hit.entity.get('ocr')[:100]}...\n")
+# data = {
+#     "id": "0372b998-aa5b-4e76-9093-42b9467889f3",
+#     "file": {"path": "C:\\Users\\ash4s\\Desktop\\PhotoSearch\\uploads\\0372b998-aa5b-4e76-9093-42b9467889f3.jpg"},
+#     "name": "eng1.jpg",
+#     "description": "a poster advertising a dental clinic",
+#     "ocr": "Dental Implants, Root Canal, Smile Designing..."
+# }
+# text_to_embed = f"{data['description']} {data['ocr']}"
+# vector = model.encode(text_to_embed).tolist()
+
+# collection.insert([
+#     [data["id"]],
+#     [data["description"]],
+#     [data["ocr"]],
+#     [vector]
+# ])
+# collection.flush()
+
+# # 6. Load collection into memory (needed every run before searching)
+# collection.load()
+
+# # 7. Search
+# query = "Find dental clinic posters"
+# query_vector = model.encode(query).tolist()
+
+# results = collection.search(
+#     data=[query_vector],
+#     anns_field="embedding",
+#     param={"metric_type": "COSINE", "params": {"nprobe": 10}},
+#     limit=3,
+#     output_fields=["id", "description", "ocr"]
+# )
+
+# print("\n--- Search Results ---")
+# for hit in results[0]:
+#     print(f"ID: {hit.entity.get('id')} | Score: {hit.distance:.4f}")
+#     print(f"Description: {hit.entity.get('description')}")
+#     print(f"OCR Snippet: {hit.entity.get('ocr')[:100]}...\n")
+
+print(f'insert {insert(data)}')
+print(f'search {search('dental')}')
