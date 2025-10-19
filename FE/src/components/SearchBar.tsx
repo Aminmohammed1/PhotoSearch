@@ -4,13 +4,13 @@ import { Input } from "@/components/ui/input";
 interface SearchBarProps {
   value: string;
   onChange: (value: string) => void;
-  onSearch: () => void;
+  onSearch: (query: string) => void; // pass query string
 }
 
 const SearchBar = ({ value, onChange, onSearch }: SearchBarProps) => {
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
-      onSearch();
+      onSearch(value);
     }
   };
 

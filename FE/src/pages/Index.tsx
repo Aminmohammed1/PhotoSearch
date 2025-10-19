@@ -8,7 +8,7 @@ import ImageGrid from "@/components/ImageGrid";
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("search");
-  
+  const [results, setResults] = useState<any[]>([]);
   // Mock data - replace with actual API calls
   const mockImages = [
     {
@@ -30,9 +30,21 @@ const Index = () => {
     },
   ];
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
     console.log("Searching for:", searchQuery);
-    // Implement search functionality here
+    try {
+      const res = await fetch('http://localhost:8000/search', {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ query: searchQuery }),
+      });
+      const data = await res.json();
+      setResults(data.images); // adjust based on your backend response
+    } catch (err) {
+      console.error("Error fetching search results:", err);
+    }
   };
 
   const handleImageUpload = (file: File) => {
@@ -83,7 +95,7 @@ const Index = () => {
                   onSearch={handleSearch}
                 />
               </div>
-              <ImageGrid images={mockImages} />
+              <ImageGrid images={results} />
             </TabsContent>
 
             <TabsContent value="upload" className="space-y-12">
