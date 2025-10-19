@@ -7,9 +7,17 @@ from descriptor.sample_run_blip import provide_description
 from milvus_connection import search
 from ocr.ocr import provide_ocr
 from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
 
 from milvus_connection import insert
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all HTTP methods (GET, POST, PUT, DELETE, etc.)
+    allow_headers=["*"],  # Allow all headers
+)
 
 class SearchRequest(BaseModel):
     query: str
@@ -87,6 +95,7 @@ async def upload_image(file: UploadFile = File(...)):
 @app.post("/search")
 async def search_images(payload: SearchRequest):
     query = payload.query
+    print(query)
     results = search(query)
     image_files = []
 

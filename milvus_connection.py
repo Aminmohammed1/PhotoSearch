@@ -2,9 +2,11 @@ from pymilvus import connections, FieldSchema, CollectionSchema, DataType, Colle
 from sentence_transformers import SentenceTransformer
 
 # 1. Connect to Milvus
-connections.connect(alias="default", host="localhost", port="19530")
-print("Connected to Milvus!")
-data = {"id": "0372b998-aa5b-4e76-9093-42b9467889f3", "file": {"path": "C:\\Users\\ash4s\\Desktop\\PhotoSearch\\uploads\\0372b998-aa5b-4e76-9093-42b9467889f3.jpg"}, "name": "eng1.jpg", "description": "a poster advertising a dental clinic", "ocr": "\u5de5\n\u56fd\nTIMINGS:\n10:00\nPM\n70\nTIMINGS\nAM\n11:00\nExcellent Location\nSpecialities\nAlIl\none\nDental\nServing\nDental\nNeeds\nall\nProudly\nyour\nOUR\nSERVICES:\nDental Implants\nTreatment\nRoot Canal\n\u798f\nDesigning\nSmile\nLaser Dentistry\nSurgeries\nMaxillofacial\nClear\nAligners\nBraces/\nCrown, Bridge\n&Laminates\nDentistry\nPediatric\nFor Appointment Contact:\n8074510067\n6304192605\nmagnusdentalhospital@gmail.com\nFollow us\non:\nPlot\nNo.263.\nColony, Gate\nParamount\nHills\nNo.4, Opp Lane\n\nFine\nFare\nSu\nJoerMarket,\nBeside\nELLE\nFashion Studio,\nTolichowki, Hyderabad, Telangana State.\n"}
+try:
+    connections.connect(alias="default", host="localhost", port="19530")
+    print("Connected to Milvus!")
+except Exception as e:
+    print('error occured while trying to connect to Milvus')
 
 # 2. Define schema
 fields = [
@@ -113,6 +115,3 @@ def search(query):
 #     print(f"ID: {hit.entity.get('id')} | Score: {hit.distance:.4f}")
 #     print(f"Description: {hit.entity.get('description')}")
 #     print(f"OCR Snippet: {hit.entity.get('ocr')[:100]}...\n")
-
-print(f'insert {insert(data)}')
-print(f'search {search('dental')}')
