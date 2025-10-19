@@ -1,14 +1,15 @@
-import { Upload, Image as ImageIcon } from "lucide-react";
+import { Upload, Image as ImageIcon, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 
 interface ImageUploadProps {
-  onUpload: (file: File) => void;
+  onUpload: (file: File) => void;  // called when user clicks Send
 }
 
 const ImageUpload = ({ onUpload }: ImageUploadProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -22,7 +23,7 @@ const ImageUpload = ({ onUpload }: ImageUploadProps) => {
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
-    
+
     const file = e.dataTransfer.files[0];
     if (file && file.type.startsWith("image/")) {
       handleFileSelect(file);
@@ -33,15 +34,21 @@ const ImageUpload = ({ onUpload }: ImageUploadProps) => {
     const reader = new FileReader();
     reader.onloadend = () => {
       setPreview(reader.result as string);
+      setSelectedFile(file);
     };
     reader.readAsDataURL(file);
-    onUpload(file);
   };
 
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       handleFileSelect(file);
+    }
+  };
+
+  const handleSend = () => {
+    if (selectedFile) {
+      onUpload(selectedFile);
     }
   };
 
@@ -55,24 +62,38 @@ const ImageUpload = ({ onUpload }: ImageUploadProps) => {
           relative border-2 border-dashed rounded-2xl p-12 transition-all duration-300
           ${isDragging 
             ? "border-primary bg-primary/5 scale-105" 
-            : "border-border/50 hover:border-primary/50 hover:bg-muted/50"
-          }
+            : "border-border/50 hover:border-primary/50 hover:bg-muted/50"}
         `}
       >
         {preview ? (
-          <div className="space-y-6">
+          <div className="space-y-6 flex flex-col items-center">
             <img
               src={preview}
               alt="Preview"
               className="w-full h-64 object-contain rounded-xl shadow-medium"
             />
-            <Button
-              variant="outline"
-              onClick={() => setPreview(null)}
-              className="w-full"
-            >
-              Upload Different Image
-            </Button>
+
+            <div className="flex gap-4 w-full">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setPreview(null);
+                  setSelectedFile(null);
+                }}
+                className="w-1/2"
+              >
+                Upload Different Image
+              </Button>
+
+              <Button
+                variant="default"
+                onClick={handleSend}
+                className="w-1/2 gradient-primary"
+              >
+                <Send className="h-5 w-5 mr-2" />
+                Send
+              </Button>
+            </div>
           </div>
         ) : (
           <div className="flex flex-col items-center gap-6 text-center">

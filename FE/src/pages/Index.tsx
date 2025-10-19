@@ -4,6 +4,7 @@ import { Search, Upload, Grid3x3 } from "lucide-react";
 import SearchBar from "@/components/SearchBar";
 import ImageUpload from "@/components/ImageUpload";
 import ImageGrid from "@/components/ImageGrid";
+import axios from "axios";
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -47,10 +48,24 @@ const Index = () => {
     }
   };
 
-  const handleImageUpload = (file: File) => {
+  const handleImageUpload = async (file: File) => {
     console.log("Uploaded file:", file.name);
     // Implement image upload and search here
-  };
+    
+    const formData = new FormData();
+    formData.append("file", file); 
+
+    try {
+      const response = await axios.post("http://127.0.01:8000/upload", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      console.log("Upload response:", response.data);
+    } catch (error) {
+      console.error("Error uploading image:", error);
+  }
+};
 
   return (
     <div className="min-h-screen bg-background">
