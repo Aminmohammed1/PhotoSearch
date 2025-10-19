@@ -13,7 +13,7 @@ fields = [
     FieldSchema(name="id", dtype=DataType.VARCHAR, is_primary=True, max_length=36),
     FieldSchema(name="description", dtype=DataType.VARCHAR, max_length=1024),
     FieldSchema(name="ocr", dtype=DataType.VARCHAR, max_length=8192),
-    FieldSchema(name="embedding", dtype=DataType.FLOAT_VECTOR, dim=384)
+    FieldSchema(name="embedding", dtype=DataType.FLOAT_VECTOR, dim=1024)
 ]
 schema = CollectionSchema(fields, description="PhotoSearch OCR+Description Collection")
 
@@ -30,7 +30,8 @@ else:
 index_params = {
     "index_type": "IVF_FLAT",
     "metric_type": "COSINE",
-    "params": {"nlist": 128}
+    # "params": {"nlist": 128}
+    "params": {"M": 32, "efConstruction": 200}
 }
 
 indexes = collection.indexes
@@ -41,12 +42,12 @@ else:
     print("Index already exists, skipping creation.")
 
 # 5. Insert some example data
-model = SentenceTransformer("all-MiniLM-L6-v2")
+# model = SentenceTransformer("all-MiniLM-L6-v2")
+model = SentenceTransformer("BAAI/bge-large-en-v1.5")
 
 def insert(data):
-    text_to_embed = f"{data['description']} {data['ocr']}"
+    text_to_embed = f"Description: {data['description']} OCR: {data['ocr']}"
     vector = model.encode(text_to_embed).tolist()
-
     collection.insert([
         [data["id"]],
         [data["description"]],
@@ -63,8 +64,9 @@ def search(query):
     results = collection.search(
         data=[query_vector],
         anns_field="embedding",
-        param={"metric_type": "COSINE", "params": {"nprobe": 10}},
-        limit=3,
+        # param={"metric_type": "COSINE", "params": {"nprobe": 32}},
+        param={"metric_type": "COSINE", "params": {"ef": 64}},
+        limit=10,
         output_fields=["id", "description", "ocr"]
     )
     result = []
