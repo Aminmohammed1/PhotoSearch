@@ -8,6 +8,7 @@ from milvus_connection import search
 from ocr.ocr import provide_ocr
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
+import glob
 
 from milvus_connection import insert
 app = FastAPI()
@@ -91,7 +92,6 @@ async def upload_image(file: UploadFile = File(...)):
 
     return JSONResponse(content={"message": "Upload successful", "data": record})
 
-
 @app.post("/search")
 async def search_images(payload: SearchRequest):
     query = payload.query
@@ -101,21 +101,19 @@ async def search_images(payload: SearchRequest):
 
     for result in results:
         img_id = result.get("id")
-        img_path = os.path.join(UPLOAD_DIR, f"{img_id}.jpg")
-
-        if os.path.exists(img_path):
-            image_files.append({
-                "id": img_id,
-                # Generate full URL that Postman/browser can load
-                "url": f"http://127.0.0.1:8000/image/{img_id}"
-            })
-
+        image_files.append({
+            "id": img_id,
+            "url": f"http://127.0.0.1:8000/image/{img_id}"
+        })
     return JSONResponse(content={"images": image_files})
 
 
 @app.get("/image/{image_id}")
 async def get_image(image_id: str):
-    img_path = os.path.join(UPLOAD_DIR, f"{image_id}.jpg")
+    matches = glob.glob(os.path.join(UPLOAD_DIR, f"{image_id}.*"))
+    img_path = matches[0]
+    ext = os.path.splitext(img_path)[1]
+    img_path = os.path.join(UPLOAD_DIR, f"{image_id}{ext}")
     if not os.path.exists(img_path):
         return JSONResponse(content={"error": "Image not found"}, status_code=404)
 
